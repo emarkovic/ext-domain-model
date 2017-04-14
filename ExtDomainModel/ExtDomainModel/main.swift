@@ -9,13 +9,6 @@
 import Foundation
 
 ////////////////////////////////////
-// String convertible
-//
-protocol CustomStringConvertible {
-    func toString() -> String
-}
-
-////////////////////////////////////
 // Math
 //
 protocol Mathematics {
@@ -42,7 +35,9 @@ extension Double {
 public struct Money: CustomStringConvertible, Mathematics {
     public var amount : Int
     public var currency : String
-    // I dont think it makes sense adding a description prop here
+    public var description: String {
+        return "\(self.currency)\(Double(self.amount))"
+    }
     
     public func convert(_ to: String) -> Money {
         var newAmount: Int?
@@ -129,10 +124,6 @@ public struct Money: CustomStringConvertible, Mathematics {
         
         return Money(amount: newAmount!, currency: from.currency)
     }
-    
-    public func toString() -> String {
-        return "\(self.currency)\(Double(self.amount))"
-    }
 }
 
 ////////////////////////////////////
@@ -141,8 +132,17 @@ public struct Money: CustomStringConvertible, Mathematics {
 open class Job: CustomStringConvertible {
     fileprivate var title : String
     fileprivate var type : JobType
-    // this is not necessary?
-//    fileprivate var description: String
+    open var description: String{
+        var amtPaid = ""
+        switch self.type {
+        case JobType.Hourly:
+            amtPaid = "$\(self.type.getValue())/hr"
+        case JobType.Salary:
+            amtPaid = "$\(self.type.getValue())"
+        }
+        return self.title + ": \(amtPaid)"
+    }
+    
     
     public enum JobType {
         case Hourly(Double)
@@ -161,8 +161,6 @@ open class Job: CustomStringConvertible {
     public init(title : String, type : JobType) {
         self.title = title
         self.type = type
-        // this does not work...
-//        self.description = self.toString()
     }
     
     open func calculateIncome(_ hours: Int) -> Int {
@@ -185,17 +183,7 @@ open class Job: CustomStringConvertible {
             self.type = JobType.Salary(newPay)
         }
     }
-    
-    open func toString() -> String {
-        var amtPaid = ""
-        switch self.type {
-        case JobType.Hourly:
-            amtPaid = "$\(self.type.getValue())/hr"
-        case JobType.Salary:
-            amtPaid = "$\(self.type.getValue())"
-        }
-        return self.title + ": \(amtPaid)"
-    }
+
 }
 
 
@@ -206,6 +194,23 @@ open class Person: CustomStringConvertible {
     open var firstName : String = ""
     open var lastName : String = ""
     open var age : Int = 0
+    open var description: String{
+        var jobStr: String?
+        if self.job != nil {
+            jobStr = self.job!.title
+        } else {
+            jobStr = "nil"
+        }
+        
+        var spouseStr: String?
+        if self.spouse != nil {
+            spouseStr = self.spouse?.firstName
+        } else {
+            spouseStr = "nil"
+        }
+        
+        return "[Person: firstName:\(self.firstName) lastName:\(self.lastName) age:\(self.age) job:\(jobStr!) spouse:\(spouseStr!)]"
+    }
     
     fileprivate var _job : Job? = nil
     
@@ -239,24 +244,7 @@ open class Person: CustomStringConvertible {
         self.lastName = lastName
         self.age = age
     }
-    
-    open func toString() -> String {
-        var jobStr: String?
-        if self.job != nil {
-            jobStr = self.job!.title
-        } else {
-            jobStr = "nil"
-        }
-        
-        var spouseStr: String?
-        if self.spouse != nil {
-            spouseStr = self.spouse?.firstName
-        } else {
-            spouseStr = "nil"
-        }
-        
-        return "[Person: firstName:\(self.firstName) lastName:\(self.lastName) age:\(self.age) job:\(jobStr!) spouse:\(spouseStr!)]"
-    }
+
 }
 
 ////////////////////////////////////
@@ -264,6 +252,14 @@ open class Person: CustomStringConvertible {
 //
 open class Family: CustomStringConvertible {
     fileprivate var members : [Person] = []
+    open var description: String{
+        let income = "Income: $\(self.householdIncome()) "
+        var members = "Members: "
+        for m in self.members {
+            members += m.firstName + " "
+        }
+        return income + members
+    }
     
     public init(spouse1: Person, spouse2: Person) {
         if spouse1.spouse == nil && spouse2.spouse == nil
@@ -297,15 +293,6 @@ open class Family: CustomStringConvertible {
         }
         print(income)
         return income
-    }
-    
-    open func toString() -> String {
-        let income = "Income: $\(self.householdIncome()) "
-        var members = "Members: "
-        for m in self.members {
-            members += m.firstName + " "
-        }
-        return income + members
     }
 }
 
